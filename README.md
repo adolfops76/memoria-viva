@@ -1,42 +1,55 @@
 # Memória Viva
 
-Aplicação web pessoal para captura, organização, busca, conexão e revisitação de conhecimento. A versão 1.0 roda como site estático no GitHub Pages e não envia registros para o servidor.
+Aplicação web pessoal para captura, organização, busca, conexão e revisitação de conhecimento. O site é estático no GitHub Pages. Os registros ficam localmente até que o usuário escolha salvá-los ou restaurá-los no Google Drive.
 
 ## Usar
 
-Abra o site e use **Capturar** ou a caixa “O que você descobriu hoje?”. Os registros são guardados no armazenamento local do navegador usado. Para transportar dados, abra **Dados e ajustes → Backup e restauração** e exporte/importa o arquivo JSON. Também há exportação CSV e Markdown.
+Abra o site e use **Capturar** ou a caixa “O que você descobriu hoje?”. Para backup entre aparelhos, abra **Dados e ajustes → Google Drive**, configure OAuth, conecte a conta, selecione a pasta privada `4. Índice de Conhecimento` e use **Salvar backup no Drive** ou **Baixar índice do Drive**. A sincronização é manual; evite salvar em paralelo a partir de cópias locais diferentes.
 
-> O armazenamento local não sincroniza entre dispositivos e pode ser apagado ao limpar os dados do navegador. Mantenha backups JSON em local privado.
+Também há exportação/restauração JSON e exportações CSV/Markdown.
 
-## Privacidade
+## Configurar o Google Drive
 
-O repositório e o site são públicos. Nenhum registro de pesquisa, título, URL, índice privado, documento, chave ou token é incluído no código publicado. A V1 não autentica nem sincroniza com Google Drive. É possível registrar um link privado do Drive manualmente; a permissão continua sendo controlada pelo Drive. O site não afirma preservar páginas automaticamente. Para preservação, salve a página (por exemplo, usando SingleFile), exporte PDF/Markdown quando aplicável e guarde o arquivo na sua conta do Drive com acesso restrito; registre o link no cadastro.
+1. No [Google Cloud Console](https://console.cloud.google.com/), crie ou selecione um projeto.
+2. Ative **Google Drive API** e **Google Picker API**.
+3. Configure a tela de consentimento OAuth e crie um **OAuth Client ID para aplicativo Web**. Em **Authorized JavaScript origins**, adicione `https://adolfops76.github.io`.
+4. Crie uma chave de API. Restrinja o uso por HTTP referrer ao site `https://adolfops76.github.io/*` e ao frame do Picker `https://docs.google.com/*`; restrinja as APIs permitidas à Google Picker API e Google Drive API.
+5. Copie o OAuth Client ID, a chave e o número do projeto Google Cloud para **Dados e ajustes → Google Drive** e salve a configuração neste navegador.
+6. Clique **Conectar Google**, autorize o escopo `drive.file`, selecione a pasta privada `4. Índice de Conhecimento` e salve o backup.
 
-Não coloque documentos privados, dados de pesquisa ou segredos neste repositório.
+O site cria ou atualiza nessa pasta o arquivo privado `MemoriaViva-index.json`. Para usar outro aparelho, repita a configuração OAuth, conecte a mesma conta, selecione a mesma pasta e baixe o índice. O arquivo substitui os dados locais somente após confirmação. O token OAuth fica em memória durante a sessão e não é salvo no `localStorage` nem no repositório. Client ID, chave de API e número do projeto são configuração pública do cliente, guardada apenas no navegador e protegida pelas restrições indicadas; não use chave de serviço nem segredo OAuth no front-end.
 
-## Funcionalidades da V1
+A conexão do site não envia automaticamente os arquivos originais das fontes. Faça a captura da página (por exemplo, com SingleFile), salve HTML/PDF/Markdown e imagens importantes no Drive privado, depois registre o link no conhecimento. O site não afirma que uma fonte foi preservada sem você salvar o arquivo.
 
-- Dashboard com captura rápida, contadores, recentes e fila de revisão.
-- Cadastro e edição de fontes/conhecimentos com distinção entre descrição original e comentários pessoais.
+## Privacidade e limites
+
+O repositório e o site são públicos. Nenhum registro, título, URL privada, ID de pasta, Client ID, chave ou token está fixado no código. Ao clicar para salvar, os dados do seu índice são enviados à pasta do Drive que você selecionou; as permissões dessa pasta controlam quem pode vê-los. O escopo OAuth usado é `drive.file`, para arquivos criados ou escolhidos pelo usuário para o app.
+
+O armazenamento local não sincroniza por si só e pode ser apagado ao limpar os dados do navegador. Mantenha uma cópia no Drive. A sincronização atual é manual, sem mesclagem automática ou prevenção de conflitos entre aparelhos.
+
+Não coloque documentos privados, registros ou segredos no repositório público.
+
+## Funcionalidades
+
+- Dashboard com captura rápida, contadores, capturas recentes e fila de revisão.
+- Cadastro e edição com distinção entre descrição original e comentários pessoais.
 - Biblioteca com busca, filtros e ordenação.
-- Revisitação espaçada configurável; revisar, adiar, aprofundar, dominar e arquivar por edição do status.
-- Mapa visual interativo com ligações derivadas de assunto e etiquetas em comum.
+- Revisitação espaçada configurável; revisar, adiar, aprofundar, dominar e arquivar.
+- Mapa de conexões baseado em assuntos e etiquetas em comum.
 - Projetos com hierarquia numérica.
-- Tema claro/escuro, layout responsivo para desktop, tablet e celular.
-- Backup/restauração JSON e exportações CSV/Markdown.
+- Tema claro/escuro, layout responsivo, backup/restauração JSON e exportações CSV/Markdown.
+- Backup JSON privado no Drive por ação explícita e restauração em outro navegador.
 
 ## Pendências
 
-- Login e sincronização autenticada com Google Drive (OAuth 2.0) e verificação de pastas existentes.
-- Persistência multiaparelho e cópias de segurança automáticas.
-- Captura automatizada de páginas, extração de texto e gestão de snapshots HTML/PDF/imagens. Na V1, a preservação é manual; não se declara cópia salva sem ação do usuário.
-- Histórico de alterações completo, conexões editáveis entre conceitos/projetos e classificação/resumos assistidos por IA.
+- Testar a autorização OAuth e o fluxo de Picker com as credenciais do projeto Google Cloud do proprietário.
+- Sincronização automática, mesclagem de alterações e prevenção de conflitos.
+- Upload automatizado de fontes originais e captura de páginas.
+- Histórico completo de alterações, conexões editáveis e classificação/resumos assistidos por IA.
 - Migração futura para React/TypeScript e testes automatizados integrados.
 
-## Arquitetura
+## Arquitetura e publicação
 
-`index.html` é um app estático sem backend; GitHub Pages entrega os arquivos públicos. `localStorage` mantém os dados apenas no navegador local. O GitHub Actions publica o conteúdo da branch `main` com Pages. Para sincronização privada futura, adicione um backend com autenticação e armazenamento privado ou integração OAuth do Google Drive; nunca coloque credenciais de serviço no front-end público.
+`index.html` é um app estático sem backend; GitHub Pages entrega os arquivos públicos. `localStorage` guarda os dados locais. A integração OAuth usa o Google Identity Services e chamadas diretas à Drive API a partir do navegador; o Picker permite ao usuário escolher a pasta. Tokens nunca são gravados. O GitHub Actions publica a branch `main` usando `.github/workflows/pages.yml`.
 
-## Desenvolvimento e publicação
-
-A versão atual não exige build ou dependências. Teste localmente abrindo `index.html` ou rode `python -m http.server 8000`. Alterações enviadas à branch `main` serão publicadas pela workflow em `.github/workflows/pages.yml`.
+A versão atual não exige build ou dependências. Para testar localmente, abra `index.html` ou rode `python -m http.server 8000`. OAuth precisa de uma origem autorizada com HTTPS, como o endereço publicado no GitHub Pages.
